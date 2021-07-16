@@ -19,5 +19,5 @@ write.csv(data, "data.csv")
 write.csv(sample_n(data, 1e4), "data_sample.csv")
 
 fileConn<-file(".gitignore")
-writeLines(c("data.csv","data_sample.csv"), fileConn)
+writeLines(c("data.csv", "data_sample.csv"), fileConn)
 close(fileConn)
