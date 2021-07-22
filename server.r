@@ -1,9 +1,8 @@
-library(lubridate); library(stringr); library(vroom); library(tidyverse)
+library(lubridate); library(stringr); library(vroom); library(tidyverse); library(ggmap)
 
 shinyServer(function(input, output) {
   
   variables <- reactiveValues(bike_data=vroom("data_structure.csv"))
-
   observeEvent(input$load, {
       date_seq <- seq(input$from_date, input$to_date, "months")
       temp <- tempfile()
@@ -34,15 +33,34 @@ shinyServer(function(input, output) {
     
   DrawChart <- eventReactive(input$start, {
     bike_data_sample <- sample_frac(variables$bike_data, input$sampleSize/100)
-    chart <- ggplot(bike_data_sample) 
-    chart <- chart + aes_string(x = bike_data_sample$gender, y = bike_data_sample$tripduration) + geom_boxplot()
+    chart <- ggplot(bike_data_sample, aes(x = gender, y = tripduration)) + geom_boxplot()
     print(chart)
-      
+  })
+
+  DrawMap <- eventReactive(input$start, {
+    bike_data_sample <- sample_frac(variables$bike_data, input$sampleSize/100)
+    margin <- 0.01
+    verticalSize <- (max(bike_data_sample$`start station latitude`) + margin) - (min(bike_data_sample$`start station latitude`) - margin)
+    manhattan_bb <- c(
+      left = mean(bike_data_sample$`start station longitude`, na.rm = TRUE) - verticalSize/2,
+      bottom = min(bike_data_sample$`start station latitude`) - margin,
+      right = mean(bike_data_sample$`start station longitude`, na.rm = TRUE) + verticalSize/2,
+      top = max(bike_data_sample$`start station latitude`) + margin
+    )
+    newyorkmap <- get_stamenmap(bbox=manhattan_bb, maptype="toner", zoom=input$mapScale)
+    chart <- ggmap(newyorkmap) + geom_point(data=bike_data_sample, aes(x=`start station longitude`,y=`start station latitude`), color='red',size=2)+
+      theme(axis.ticks = element_blank(), axis.text = element_blank())+
+      xlab('')+ylab('')
+    print(chart)
   })
   
   output$plot <- renderPlot({
     DrawChart()
   }, width = 1200, height = 720)
   
+  output$map <- renderPlot({
+    DrawMap()
+  }, width = 900, height = 900)
+
   output$table <- renderDataTable(sample_frac(variables$bike_data, input$sampleSize/100))
 })
