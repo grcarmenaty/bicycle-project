@@ -1,7 +1,5 @@
 library(shiny); library(ggplot2); library(lubridate); library(stringr)
 
-last_date <- format(as.Date(paste(format(Sys.Date(), "%Y-%m"), "-01", sep=""))-1, "%Y-%m-%d")
-
 shinyUI(fluidPage(
   titlePanel("NYC Bikes"),
   
@@ -18,9 +16,13 @@ shinyUI(fluidPage(
                   value = 5, min = 0, max = 100, step = 1, round = 0),
       sliderInput("mapScale", "Map scale",
                   value = 12, min = 0, max = 18, step = 1, round = 0),
+      radioButtons(
+        "from_to", "From/To", choiceValues=c(TRUE, FALSE), choiceNames=c("From", "To")
       ),
-  
-    
+      selectInput(
+        "station_name", "Station", choices=vroom("station_names.csv")$station_names
+      ),
+    ),
     # Panell central
     mainPanel(
       tabsetPanel(type = "tabs",

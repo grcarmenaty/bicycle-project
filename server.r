@@ -39,6 +39,7 @@ shinyServer(function(input, output) {
 
   DrawMap <- eventReactive(input$start, {
     bike_data_sample <- sample_frac(variables$bike_data, input$sampleSize/100)
+    bike_data_count <- bike_data_sample %>% filter(`start station name`==input$station_name) %>% group_by(`end station name`) %>% summarise(trip_count = n(), start_lon=mean(`start station longitude`), start_lat=mean(`start station latitude`), lon=mean(`end station longitude`), lat=mean(`end station latitude`))
     margin <- 0.01
     verticalSize <- (max(bike_data_sample$`start station latitude`) + margin) - (min(bike_data_sample$`start station latitude`) - margin)
     manhattan_bb <- c(
@@ -48,7 +49,13 @@ shinyServer(function(input, output) {
       top = max(bike_data_sample$`start station latitude`) + margin
     )
     newyorkmap <- get_stamenmap(bbox=manhattan_bb, maptype="toner", zoom=input$mapScale)
-    chart <- ggmap(newyorkmap) + geom_point(data=bike_data_sample, aes(x=`start station longitude`,y=`start station latitude`), color='red',size=2)+
+    chart <- ggmap(newyorkmap) +
+      geom_point(data=bike_data_sample, aes(x=`start station longitude`,y=`start station latitude`), color='red',size=2) +
+      geom_segment(data=bike_data_count, aes(
+                    x=start_lon,y=start_lat,
+                    xend=lon, yend=lat,
+                    color=trip_count),
+                   size=1, alpha=0.75) +
       theme(axis.ticks = element_blank(), axis.text = element_blank())+
       xlab('')+ylab('')
     print(chart)
