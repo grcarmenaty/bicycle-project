@@ -15,7 +15,7 @@ shinyUI(fluidPage(
       actionButton("load", "Load"),
       actionButton("start", "Calculate"),
       sliderInput("sampleSize", "Mida de la mostra",
-                  value = 20, min = 10, max = 100, step = 1, round = 0),
+                  value = 5, min = 0, max = 100, step = 1, round = 0),
     ),
     
     # Panell central
