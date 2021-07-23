@@ -22,6 +22,14 @@ shinyUI(fluidPage(
       selectInput(
         "station_name", "Station", choices=vroom("station_names.csv")$station_names
       ),
+      numericInput("topStations", "Top/Bottom fraction",
+                  value = 5, min = 0),
+      radioButtons(
+        "top_bottom", "", choiceValues=c(TRUE, FALSE), choiceNames=c("Top", "Bottom")
+      ),
+      selectInput(
+        "criterion", "Map color criterion", choices=c("Trip duration", "Trip count", "User age")
+      ),
     ),
     # Panell central
     mainPanel(
