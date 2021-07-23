@@ -39,24 +39,34 @@ shinyServer(function(input, output) {
 
   DrawMap <- eventReactive(input$start, {
     bike_data_sample <- sample_frac(variables$bike_data, input$sampleSize/100)
-    bike_data_count <- bike_data_sample %>% filter(`start station name`==input$station_name) %>% group_by(`end station name`) %>% summarise(trip_count = n(), start_lon=mean(`start station longitude`), start_lat=mean(`start station latitude`), lon=mean(`end station longitude`), lat=mean(`end station latitude`))
+    if(input$from_to){
+      bike_data_count <- bike_data_sample %>%
+        filter(`start station name`==input$station_name) %>% group_by(`end station name`) %>%
+        summarise(
+          color = n(),
+          start_lon=mean(`start station longitude`),
+          start_lat=mean(`start station latitude`),
+          lon=mean(`end station longitude`),
+          lat=mean(`end station latitude`))}
+    else{bike_data_count <- bike_data_sample %>% filter(`end station name`==input$station_name) %>% group_by(`start station name`) %>% summarise(color = n(), start_lon=mean(`end station longitude`), start_lat=mean(`end station latitude`), lon=mean(`start station longitude`), lat=mean(`start station latitude`))}
     margin <- 0.01
-    verticalSize <- (max(bike_data_sample$`start station latitude`) + margin) - (min(bike_data_sample$`start station latitude`) - margin)
+    verticalSize <- (max(bike_data_count$lat) + margin) - (min(bike_data_count$lat) - margin)
     manhattan_bb <- c(
-      left = mean(bike_data_sample$`start station longitude`, na.rm = TRUE) - verticalSize/2,
-      bottom = min(bike_data_sample$`start station latitude`) - margin,
-      right = mean(bike_data_sample$`start station longitude`, na.rm = TRUE) + verticalSize/2,
-      top = max(bike_data_sample$`start station latitude`) + margin
+      left = mean(bike_data_count$lon, na.rm = TRUE) - verticalSize/2,
+      bottom = min(bike_data_count$lat) - margin,
+      right = mean(bike_data_count$lon, na.rm = TRUE) + verticalSize/2,
+      top = max(bike_data_count$lat) + margin
     )
     newyorkmap <- get_stamenmap(bbox=manhattan_bb, maptype="toner", zoom=input$mapScale)
     chart <- ggmap(newyorkmap) +
-      geom_point(data=bike_data_sample, aes(x=`start station longitude`,y=`start station latitude`), color='red',size=2) +
+      geom_point(data=bike_data_count, aes(x=start_lon, y=start_lat), color="blue", size=6) +
+      geom_point(data=bike_data_count, aes(x=lon, y=lat, color=color), size=6) +
       geom_segment(data=bike_data_count, aes(
                     x=start_lon,y=start_lat,
                     xend=lon, yend=lat,
-                    color=trip_count),
-                   size=1, alpha=0.75) +
-      theme(axis.ticks = element_blank(), axis.text = element_blank())+
+                    color=color),
+                   size=1.5, alpha=0.75) +
+      theme(axis.ticks = element_blank(), axis.text = element_blank()) +
       xlab('')+ylab('')
     print(chart)
   })
@@ -67,7 +77,7 @@ shinyServer(function(input, output) {
   
   output$map <- renderPlot({
     DrawMap()
-  }, width = 900, height = 900)
+  }, width = 890, height = 890)
 
   output$table <- renderDataTable(sample_frac(variables$bike_data, input$sampleSize/100))
 })
