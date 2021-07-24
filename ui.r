@@ -1,4 +1,7 @@
-library(shiny); library(ggplot2); library(lubridate); library(stringr)
+library(shiny); library(ggplot2); library(lubridate); library(stringr); library(vroom); library(tidyverse)
+
+Color_opt=c('PuBuGn','YlGn','YlGnBu','Spectral','Blues','Greys','Reds')
+x_opt=c('Age','Trip duration')
 
 shinyUI(fluidPage(
   titlePanel("NYC Bikes"),
@@ -14,13 +17,24 @@ shinyUI(fluidPage(
       actionButton("start", "Calculate"),
       sliderInput("sampleSize", "Sample size",
                   value = 5, min = 0, max = 100, step = 1, round = 0),
+      sliderInput("bins",
+                  "Number of bins:",
+                  min = 5,
+                  max = 20,
+                  value = 10),
+      sliderInput('x_bin','x ticks gap',min=2, max=20,value=10),
+      selectInput('Color_opt', 'Palette option', Color_opt),
+      selectInput('x_opt','Select X variable',x_opt),
+      selectInput(inputId = 'color_var',
+                  label = 'Select color variable',
+                  choices= c('Gender','User type')),
       sliderInput("mapScale", "Map scale",
                   value = 12, min = 0, max = 18, step = 1, round = 0),
       radioButtons(
         "from_to", "From/To", choiceValues=c(TRUE, FALSE), choiceNames=c("From", "To")
       ),
       selectInput(
-        "station_name", "Station", choices=vroom("station_names.csv")$station_names
+        "station_name", "Station", choices=vroom("station_names.csv", delim=",")$station_names
       ),
       numericInput("topStations", "Top/Bottom fraction",
                   value = 5, min = 0),
@@ -41,5 +55,3 @@ shinyUI(fluidPage(
     )
   )
 ))
-      
-  

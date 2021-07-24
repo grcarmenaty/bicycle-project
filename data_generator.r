@@ -1,4 +1,5 @@
 install.packages("vroom")
+install.packages("ggmap")
 install.packages("tidyverse")
 library(tidyverse)
 library(vroom)
