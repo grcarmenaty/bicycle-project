@@ -1,4 +1,7 @@
-library(lubridate); library(stringr); library(vroom); library(tidyverse); library(ggmap)
+list.of.packages <- c("lubridate", "stringr", "vroom", "tidyverse", "ggmap", "shiny", "ggplot2")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+library(shiny); library(ggplot2); library(lubridate); library(stringr); library(vroom); library(tidyverse); library(ggmap)
 
 shinyServer(function(input, output) {
   
