@@ -33,8 +33,61 @@ shinyServer(function(input, output) {
     
   DrawChart <- eventReactive(input$start, {
     bike_data_sample <- sample_frac(variables$bike_data, input$sampleSize/100)
-    chart <- ggplot(bike_data_sample, aes(x = gender, y = tripduration)) + geom_boxplot()
-    print(chart)
+    mu=bike_data_sample %>%
+      group_by(gender) %>%
+      summarise_at(vars(`birth year`), list(name =mean))
+    mu[,2]=2020-mu[,2]
+    bike_data_sample$Age=as.numeric(format(Sys.Date(), "%Y"))-bike_data_sample[, 15]
+    bins <- seq(5, 20, length.out = input$bins)
+
+    if (input$color_var=='Gender'){
+      ccolor=bike_data_sample$gender
+    } else if (input$color_var=='User type'){
+      ccolor=bike_data_sample$usertype
+    }
+
+    if (input$x_opt=='Age'& input$color_var=='Gender'){
+      plot=ggplot(bike_data_sample, aes(x=Age,color=ccolor,fill=ccolor)) +
+        geom_histogram(bins=input$bins,alpha=.4)+
+        theme_classic()+ xlab('Age')+ylab('Trips')+
+        geom_vline(data=mu, aes(xintercept=name, color=gender),
+          linetype="dashed",size=1.5)+
+        scale_color_brewer(palette=input$Color_opt)+
+        scale_fill_brewer(palette=input$Color_opt)+
+        scale_x_continuous(breaks = round(seq(min(bike_data_sample$Age), max(bike_data_sample$Age),
+          by=input$x_bin),1),expand = c(0, 0))+
+        scale_y_continuous(expand=c(0,0))
+            
+    } else if (input$x_opt=='Age'& input$color_var=='User type'){
+      plot=ggplot(bike_data_sample, aes(x=Age,color=ccolor,fill=ccolor)) +
+        geom_histogram(bins=input$bins,alpha=.4)+
+        theme_classic()+ xlab('Age')+ylab('Trips')+
+        scale_color_brewer(palette=input$Color_opt)+
+        scale_fill_brewer(palette=input$Color_opt)+
+        scale_x_continuous(breaks = round(seq(min(bike_data_sample$Age), max(bike_data_sample$Age),
+          by=input$x_bin),1),expand = c(0, 0))+
+          scale_y_continuous(expand=c(0,0))
+    }
+    if(input$x_opt=='Trip duration'){
+      bike_data_sample2=bike_data_sample[(bike_data_sample$tripduration<3.6e3),]
+      if (input$color_var=='Gender'){
+        ccolor=bike_data_sample2$gender
+      } else if (input$color_var=='User type'){
+        ccolor=bike_data_sample2$usertype
+      }
+      plot=ggplot(bike_data_sample2, aes(x=tripduration/60,color=ccolor,
+        fill=ccolor)) +
+        geom_histogram(bins=input$bins,alpha=.4)+
+        theme_classic()+ xlab('Age')+ylab('Trips')+
+        xlab('Trip duration [min]')+ylab('Trips')+
+        scale_color_brewer(palette=input$Color_opt)+
+        scale_fill_brewer(palette=input$Color_opt)+
+        scale_x_continuous(breaks = round(seq(0, max(bike_data_sample2$tripduration/60),
+          by=input$x_bin),1),expand = c(0, 0))+
+        scale_y_continuous(expand=c(0,0))
+    }
+    print(plot)
+
   })
 
   DrawMap <- eventReactive(input$start, {
