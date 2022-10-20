@@ -3,7 +3,7 @@ new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"
 if(length(new.packages)) install.packages(new.packages)
 library(shiny); library(ggplot2); library(lubridate); library(stringr); library(vroom); library(tidyverse); library(ggmap)
 
-shinyServer(function(input, output) {
+shinyServer(function(input, output, session) {
   
   variables <- reactiveValues(bike_data=vroom("data_structure.csv"))
   observeEvent(input$load, {
@@ -32,6 +32,8 @@ shinyServer(function(input, output) {
       birthyear_outliers <- boxplot(na.omit(variables$bike_data)$`birth year`, plot=FALSE)$out
       variables$bike_data <- variables$bike_data[-which(variables$bike_data$`birth year` %in% birthyear_outliers), ]
       variables$bike_data <- variables$bike_data %>% filter(starttime > input$from_date & stoptime < input$to_date)
+      station_names <- unique(c(variables$bike_data$`start station name`, variables$bike_data$`end station name`))
+      write.csv(station_names, "station_names.csv")
   })
     
   DrawChart <- eventReactive(input$start, {
@@ -178,6 +180,7 @@ shinyServer(function(input, output) {
         bike_data_count <- tail(bike_data_count, (input$topStations))
       }
     }
+    print(bike_data_count)
     margin <- 0.01
     verticalSize <- (max(c(bike_data_count$lat, bike_data_count$start_lat)) + margin) - (min(c(bike_data_count$lat, bike_data_count$start_lat)) - margin)
     manhattan_bb <- c(
